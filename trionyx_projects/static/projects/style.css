@@ -1,0 +1,66 @@
+.badge-icon {
+    border-radius: 2px;
+    padding: unset;
+    font-size: 14px;
+    line-height: 22px;
+    width: 22px;
+    height: 22px;
+}
+
+.badge-feature {
+    background-color: #02b371;
+    color: #fff;
+}
+
+.badge-enhancement {
+    background-color: #f2ce4c;
+    color: #fff;
+}
+
+.badge-task {
+    background-color: #1e91ce;
+    color: #fff;
+}
+
+.badge-bug {
+    background-color: #ce4f4b;
+    color: #fff;
+}
+
+.badge-question {
+    background-color: #209eae;
+    color: #fff;
+}
+
+.priority-icon-highest {
+    color: #ce0000;
+    font-size: 1.1em;
+}
+
+.priority-icon-high {
+    color: #ea4444;
+}
+
+.priority-icon-medium {
+    color: #ee854d;
+}
+
+.priority-icon-low {
+    color: #55a557;
+}
+
+.priority-icon-lowest {
+    color: #2b8735;
+    font-size: 1.1em;
+}
+
+.estimate-badge {
+    border-radius: 2px;
+    background-color: rgba(24,28,33,.1);
+    color: #4E5155;
+    min-width: 25px;
+}
+
+.width-100 {
+    width: 100%;
+}
