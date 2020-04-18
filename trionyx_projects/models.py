@@ -123,6 +123,12 @@ class Item(models.BaseModel):
     total_worked = models.FloatField(default=0.0, blank=True)
     total_billed = models.FloatField(default=0.0, blank=True)
 
+    class Meta:
+        permissions = (
+            ("limit_add_item", "Limit add"),
+            ("limit_change_item", "Limit change"),
+        )
+
     @property
     def estimate_used(self):
         return 0.0

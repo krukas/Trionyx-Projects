@@ -12,6 +12,7 @@ from trionyx.forms.helper import FormHelper
 from trionyx.forms.layout import Layout, Div, HTML, Depend, DateTimePicker
 from django.utils.translation import ugettext_lazy as _
 from django.utils.html import strip_tags
+from trionyx.utils import get_current_request
 
 from .models import Project, Item, Comment, WorkLog
 
@@ -110,7 +111,7 @@ class ProjectForm(forms.ModelForm):
 
         return invoice
 
-
+@forms.register(code='limited', create_permission='trionyx_projects.limit_add_item', edit_permission='trionyx_projects.limit_change_item')
 @forms.register(default_create=True, default_edit=True)
 class ItemForm(forms.ModelForm):
     description = forms.Wysiwyg(required=False)
@@ -133,6 +134,27 @@ class ItemForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        estimate_div = Div(
+            Div(
+                'estimate',
+                css_class='col-md-6',
+            ),
+            Div(
+                'non_billable',
+                css_class='col-md-6',
+            ),
+            css_class='row',
+        )
+
+        if (
+            self.instance.id and not get_current_request().user.has_perm('trionyx_projects.change_item') and get_current_request().user.has_perm('trionyx_projects.limit_change_item')
+        ) or (
+            not self.instance.id and not get_current_request().user.has_perm('trionyx_projects.add_item') and get_current_request().user.has_perm('trionyx_projects.limit_add_item')
+        ):
+            self.fields['estimate'].disabled = True
+            self.fields['non_billable'].disabled = True
+            estimate_div = Div()
+
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'project',
@@ -148,17 +170,7 @@ class ItemForm(forms.ModelForm):
                 css_class='row',
             ),
             'name',
-            Div(
-                Div(
-                    'estimate',
-                    css_class='col-md-6',
-                ),
-                Div(
-                    'non_billable',
-                    css_class='col-md-6',
-                ),
-                css_class='row',
-            ),
+            estimate_div,
             'description',
         )
 

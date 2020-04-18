@@ -54,6 +54,7 @@ def project_overview(obj):
                         model_params={
                             'project': obj.id
                         },
+                        model_code='limited' if not get_current_request().user.has_perm('trionyx_projects.add_item') and get_current_request().user.has_perm('trionyx_projects.limit_add_item') else None,
                         dialog=True,
                         dialog_reload_tab='general',
                         css_class='btn btn-flat bg-theme btn-block',
@@ -245,7 +246,7 @@ def item_sidebar(request, obj):
         'actions': [
             {
                 'label': 'Edit',
-                'url': model_url(obj, 'dialog-edit'),
+                'url': model_url(obj, 'dialog-edit', code='limited' if not get_current_request().user.has_perm('trionyx_projects.add_item') and get_current_request().user.has_perm('trionyx_projects.limit_add_item') else None),
                 'dialog': True,
                 'dialog_options': {
                     'callback': """
