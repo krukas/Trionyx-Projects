@@ -69,10 +69,6 @@ class Project(models.BaseModel):
     def hourly_rate(self):
         return float(self.project_hourly_rate if self.project_hourly_rate else app_settings.HOURLY_RATE)
 
-    @property
-    def estimate_used(self):
-        return 0.0
-
     def save(self, *args, **kwargs):
         self.code = str(self.code).upper()
         super().save(*args, **kwargs)
@@ -129,20 +125,28 @@ class Item(models.BaseModel):
             ("limit_change_item", "Limit change"),
         )
 
-    @property
-    def estimate_used(self):
-        return 0.0
-
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        if not self.code and self.project:
+        result = self.project.items.aggregate(
+            open=models.Count('pk', filter=models.Q(completed_on__isnull=True)),
+            closed=models.Count('pk', filter=models.Q(completed_on__isnull=False)),
+            total_items_estimate=models.Sum('estimate', filter=models.Q(completed_on__isnull=True))
+        )
+
+        self.project.open_items = int(result['open'] or 0)
+        self.project.completed_items = int(result['closed'] or 0)
+        self.project.total_items_estimate = float(result['total_items_estimate'] or 0)
+
+
+        if not self.code:
             with CacheLock('set-item-code', self.project_id):
                 self.project.refresh_from_db() # get latest value
                 self.project.item_increment_id += 1
                 self.code = f"{self.project.code}-{self.project.item_increment_id}"
                 self.save(update_fields=['code'])
-                self.project.save(update_fields=['item_increment_id'])
+
+        self.project.save(update_fields=['item_increment_id', 'open_items', 'completed_items', 'total_items_estimate'])
 
     @classmethod
     def get_type_icon(cls, item_type):
@@ -228,7 +232,17 @@ class WorkLog(models.BaseModel):
         if not self.description:
             self.description = f'Working on item {self.item.code}'
 
-        self.item.save()
+        self.item.save(update_fields=['total_billed', 'total_worked'])
+
+        # Update project totals
+        result = self.item.project.items.aggregate(
+            total_worked=models.Sum('total_worked'),
+            total_billed=models.Sum('total_billed'),
+        )
+        self.item.project.total_worked = float(result['total_worked'] or 0.0)
+        self.item.project.total_billed = float(result['total_billed'] or 0.0)
+        self.item.project.save(update_fields=['total_worked', 'total_billed'])
+
         super().save(*args, **kwargs)
 
     def generate_verbose_name(self):

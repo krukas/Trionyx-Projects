@@ -171,6 +171,7 @@ def item_sidebar(request, obj):
                 },
                 dialog=True,
                 dialog_reload_sidebar=True,
+                dialog_reload_tab='general',
                 css_class='btn btn-flat bg-theme btn-block',
                 object=WorkLog()
             ),
@@ -200,6 +201,7 @@ def item_sidebar(request, obj):
                             dialog=True,
                             model_url='dialog-edit',
                             dialog_reload_sidebar=True,
+                            dialog_reload_tab='general',
                             should_render=lambda comp: comp.object.created_by == request.user or request.user.is_superuser,
                         ) if request.user.has_perm('trionyx_projects.change_worklog') else None,
                         Button(
@@ -208,6 +210,7 @@ def item_sidebar(request, obj):
                             dialog=True,
                             model_url='dialog-delete',
                             dialog_reload_sidebar=True,
+                            dialog_reload_tab='general',
                             should_render=lambda comp: comp.object.created_by == request.user or request.user.is_superuser,
                         ) if request.user.has_perm('trionyx_projects.delete_worklog') else None,
                     )
