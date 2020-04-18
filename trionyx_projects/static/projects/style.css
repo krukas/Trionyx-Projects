@@ -64,3 +64,42 @@
 .width-100 {
     width: 100%;
 }
+
+
+/* Comment */
+.project-comment {
+    width: 100%;
+    border-bottom: 1px solid #eee;
+    position: relative;
+}
+
+.project-comment:last-child {
+    border-bottom: none;
+}
+
+.project-comment td {
+    padding: 5px 10px;
+}
+
+.project-comment tr:last-child td {
+    padding-bottom: 15px !important;
+}
+
+.project-comment tr td:first-child {
+    height: 30px;
+    line-height: 30px;
+    padding: 0 10px;
+}
+
+.project-comment .comment-controls {
+    float: right;
+    padding-right: 5px;
+}
+
+.project-comment .comment-controls button {
+    opacity: 0;
+}
+
+.project-comment:hover .comment-controls button {
+    opacity: 100;
+}

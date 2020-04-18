@@ -5,13 +5,15 @@ trionyx_invoices.forms
 :copyright: 2019 by Maikel Martens
 :license: GPLv3
 """
+from django.utils import timezone
 from django.apps import apps
 from trionyx import forms
 from trionyx.forms.helper import FormHelper
 from trionyx.forms.layout import Layout, Div, HTML, Depend, DateTimePicker
 from django.utils.translation import ugettext_lazy as _
+from django.utils.html import strip_tags
 
-from .models import Project, Item
+from .models import Project, Item, Comment, WorkLog
 
 
 @forms.register(default_create=True, default_edit=True)
@@ -159,3 +161,37 @@ class ItemForm(forms.ModelForm):
             ),
             'description',
         )
+
+
+
+@forms.register(default_create=True, default_edit=True)
+class CommentForm(forms.ModelForm):
+    comment = forms.Wysiwyg()
+
+    class Meta:
+        model = Comment
+        fields = ['item', 'comment']
+
+        widgets = {
+            'item': forms.HiddenInput(),
+        }
+
+    def clean_comment(self):
+        if not strip_tags(self.cleaned_data['comment']).replace('&nbsp;', ' ').strip():
+            raise forms.ValidationError('This field is required.')
+
+        return self.cleaned_data['comment']
+
+
+@forms.register(default_create=True, default_edit=True)
+class WorklogForm(forms.ModelForm):
+    description = forms.Wysiwyg(required=False)
+    date = forms.DateField(initial=timezone.now)
+
+    class Meta:
+        model = WorkLog
+        fields = ['item', 'date', 'worked', 'billed', 'description']
+
+        widgets = {
+            'item': forms.HiddenInput(),
+        }

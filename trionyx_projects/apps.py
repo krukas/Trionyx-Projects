@@ -49,6 +49,8 @@ class Config(BaseConfig):
         disable_search_index = True
         auditlog_disable = True
 
+        verbose_name = '{code}'
+
     class Comment(ModelConfig):
         menu_exclude = True
         disable_search_index = True

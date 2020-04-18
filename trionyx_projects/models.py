@@ -3,6 +3,7 @@ from trionyx import models
 from trionyx.utils import CacheLock
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.utils.translation import gettext as _
+from django.utils.html import strip_tags
 
 from .conf import settings as app_settings
 
@@ -178,12 +179,54 @@ class Comment(models.BaseModel):
     item = models.ForeignKey(Item, related_name='comments', on_delete=models.CASCADE)
     comment = models.TextField(default='')
 
+    def generate_verbose_name(self):
+        comment = strip_tags(self.comment)
+        if len(comment) > 20:
+            return f"{comment:.20}..."
+        return comment
+
 
 class WorkLog(models.BaseModel):
     item = models.ForeignKey(Item, related_name='worklogs', on_delete=models.CASCADE)
 
     date = models.DateField()
     worked = models.FloatField()
-    billed = models.FloatField(default=0.0, null=True, blank=True)
+    billed = models.FloatField(
+        null=True, blank=True,
+        help_text='On empty this wil be auto filled based on estimate and remaining billed hours, when there is no estimate billed will always be same as worked')
 
     description = models.TextField(default='', null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        result = self.item.worklogs.exclude(id=self.id).aggregate(
+            total_worked=models.Sum('worked'),
+            total_billed=models.Sum('billed'),
+        )
+        self.item.total_worked = (float(result['total_worked']) if result['total_worked'] else 0.0) + float(self.worked)
+        total_billed = float(result['total_billed']) if result['total_billed'] else 0.0
+
+        if self.item.non_billable:
+            self.billed = 0
+            self.item.total_billed = 0
+        elif not self.billed and not self.item.estimate:
+            self.billed = self.worked
+        elif not self.billed:
+            available = float(self.item.estimate or 0.0) - total_billed
+            if available > 0:
+                self.billed = available if self.worked > available else float(self.worked)
+            else:
+                self.billed = 0
+
+        self.item.total_billed = total_billed + float(self.billed)
+
+        if not self.description:
+            self.description = f'Working on item {self.item.code}'
+
+        self.item.save()
+        super().save(*args, **kwargs)
+
+    def generate_verbose_name(self):
+        description = strip_tags(self.description)
+        if len(description) > 20:
+            return f"{description:.20}..."
+        return description

@@ -1,0 +1,48 @@
+{% load static %}
+<table class="project-comment">
+    <tr>
+        <td>
+            <span class="comment-controls">
+                {% if component.object.created_by == user %}
+                    <button class="btn icon-btn btn-xs btn-default" onclick="openDialog(
+                        '{% url 'trionyx:model-dialog-edit' 'trionyx_projects' 'comment' component.object.id %}', {
+                            callback: function(response, dialog) {
+                                if (response.success) {
+                                    reloadSidebar();
+                                    dialog.close();
+                                }
+                            }
+                        })">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                {% endif %}
+                {% if component.object.created_by == user or user.is_superuser %}
+                <button id="ember431" class="btn icon-btn btn-xs btn-danger" onclick="openDialog(
+                    '{% url 'trionyx:model-dialog-delete' 'trionyx_projects' 'comment' component.object.id %}', {
+                        callback: function(response, dialog) {
+                            if (response.success) {
+                                reloadSidebar();
+                                dialog.close();
+                            }
+                        }
+                    })">
+                    <i class="fa fa-trash"></i>
+                </button>
+                {% endif %}
+            </span>
+
+            <strong>
+                {% if component.object.created_by %}
+                    <img src="{%if component.object.created_by.avatar %}{{ MEDIA_URL }}{{ component.object.created_by.avatar }}{% else %}{% static 'img/avatar.png'%}{% endif %}" class="avatar-xs">
+                    {{ component.object.created_by.get_full_name }}
+                {% else %}
+                    System
+                {% endif %}
+            </strong>
+            added a comment - {{ component.object.created_at|date:'SHORT_DATETIME_FORMAT' }}
+        </td>
+    </tr>
+    <tr>
+        <td> {{ component.object.comment|safe }}</td>
+    </tr>
+</table>
