@@ -87,8 +87,6 @@ def project_overview(obj):
                           'field': 'Calculated hours',
                           'value': float(obj.fixed_priceif if obj.fixed_price else 0) / float(obj.hourly_rate),
                         },
-                        # 'total_worked' if obj.project_type == Project.TYPE_HOURLY_BASED else None,
-                        # 'total_billed' if obj.project_type == Project.TYPE_HOURLY_BASED else None,
 
                         {
                             'label': 'Calculated price',
@@ -106,7 +104,7 @@ def project_overview(obj):
                         'total_worked',
                         'total_billed',
                     ),
-                ),
+                ) if get_current_request().user.has_perm('trionyx_projects.view_worklog') else None,
                 Panel(
                     'Description',
                     Html(obj.description),
@@ -161,7 +159,7 @@ def item_sidebar(request, obj):
              *[Component(
                  HtmlTemplate('trionyx_projects/project_comment.html', object=comment, lock_object=True),
             ) for comment in obj.comments.order_by('-created_at')]
-        ),
+        ) if request.user.has_perm('trionyx_projects.view_comment') else None,
         Panel(
             'Worklogs',
             Button(
@@ -201,20 +199,20 @@ def item_sidebar(request, obj):
                             dialog=True,
                             model_url='dialog-edit',
                             dialog_reload_sidebar=True,
-                            should_render=lambda comp: comp.object.created_by == get_current_request().user or get_current_request().user.is_superuser,
-                        ),
+                            should_render=lambda comp: comp.object.created_by == request.user or request.user.is_superuser,
+                        ) if request.user.has_perm('trionyx_projects.change_worklog') else None,
                         Button(
                             '<i class="fa fa-times"></i>',
                             css_class='btn bg-red btn-xs',
                             dialog=True,
                             model_url='dialog-delete',
                             dialog_reload_sidebar=True,
-                            should_render=lambda comp: comp.object.created_by == get_current_request().user or get_current_request().user.is_superuser,
-                        ),
+                            should_render=lambda comp: comp.object.created_by == request.user or request.user.is_superuser,
+                        ) if request.user.has_perm('trionyx_projects.delete_worklog') else None,
                     )
                 }
             ),
-        ),
+        ) if request.user.has_perm('trionyx_projects.view_worklog') else None,
     )
 
     content.set_object(obj)
@@ -233,13 +231,13 @@ def item_sidebar(request, obj):
                 'label': 'Logged',
                 'renderer': lambda value, **options: f"{value}h" if value else '0h',
                 'class': 'text-right'
-            },
+            } if request.user.has_perm('trionyx_projects.view_worklog') else None,
             {
                 'field': 'total_billed',
                 'label': 'Billed',
                 'renderer': lambda value, **options: f"{value}h" if value else '0h',
                 'class': 'text-right'
-            },
+            } if request.user.has_perm('trionyx_projects.view_worklog') else None,
             css_class='no-margin',
             object=obj,
         ).render({}, request),
